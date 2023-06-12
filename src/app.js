@@ -1,6 +1,7 @@
 import "./styles/styles.css";
 import RandomUtil from "./utils/random.util";
 import platformImages from "./constants/platforms";
+import hero from "./constants/hero";
 
 const canvas = document.getElementById("game");
 const context = canvas.getContext("2d");
@@ -179,9 +180,10 @@ function loop() {
       }
     }
   });
-
-  context.fillStyle = "yellow";
-  context.fillRect(doodle.x, doodle.y, doodle.width, doodle.height);
+  hero
+  // context.fillStyle = "yellow";
+  // context.fillRect(doodle.x, doodle.y, doodle.width, doodle.height);
+  context.drawImage(hero, doodle.x, doodle.y,doodle.width, doodle.height);
 
   prevDoodleY = doodle.y;
 
