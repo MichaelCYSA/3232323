@@ -2,12 +2,13 @@ import "./styles/styles.css";
 import RandomUtil from "./utils/random.util";
 import platformImages from "./constants/platforms";
 import hero from "./constants/hero";
+import SpringSprites from './constants/sprites'
 
 const canvas = document.getElementById("game");
 const context = canvas.getContext("2d");
 
-const platformWidth = 65;
-const platformHeight = 20;
+const platformWidth = 60;
+const platformHeight = 14;
 const platformStart = canvas.height - 50;
 
 const gravity = 0.33;
@@ -148,7 +149,10 @@ function loop() {
   platforms.forEach(function (platform) {
     if (platform.spring) {
       const x = platform.x + (platformWidth - 20) / 2;
-      context.fillRect(x, platform.y - platformHeight, 20, 20);
+     // SpringSprites
+     // context.fillRect(x, platform.y - platformHeight, 20, 20);
+      const image = platform.hasScored ? SpringSprites[0] : SpringSprites[1]
+      context.drawImage(image, x , platform.y - 22, 20, 30);
     }
     // 'greenplatform.png'
     // context.fillRect(platform.x, platform.y, platformWidth, platformHeight);
@@ -169,7 +173,7 @@ function loop() {
           doodle.dy = bounceVelocity;
         }
         platform.hasScored = true;
-        score++;
+       // score++;
       } else {
         doodle.y = platform.y - doodle.height;
         if (platform.spring) {
@@ -180,19 +184,32 @@ function loop() {
       }
     }
   });
-  hero
+  //hero
   // context.fillStyle = "yellow";
   // context.fillRect(doodle.x, doodle.y, doodle.width, doodle.height);
   context.drawImage(hero, doodle.x, doodle.y,doodle.width, doodle.height);
 
   prevDoodleY = doodle.y;
 
+  let filteredPlatform = null;
   platforms = platforms.filter(function (platform) {
-    return platform.y < canvas.height;
+
+    const visible = platform.y < canvas.height
+
+    if(!visible){
+       filteredPlatform = platform
+    }
+    return visible;
   });
 
-  context.fillStyle = "red";
-  context.font = "16px Arial";
+  if(filteredPlatform){
+    let distance = filteredPlatform.y - Math.max(...platforms.map(el => el.y))
+    score =  score + Math.ceil(distance / 10)
+    filteredPlatform = null
+  }
+
+  context.fillStyle = "black";
+  context.font = "bold 20px Arial";
   context.fillText("Score: " + score, 10, 20);
 }
 
@@ -270,6 +287,7 @@ document.addEventListener("keyup", function (event) {
   ) {
     keydown = false;
   }
+  
 });
 
 document.addEventListener("DOMContentLoaded", function () {

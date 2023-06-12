@@ -7,5 +7,11 @@ canvas {
   background-color: #000;
   background-image: url("/images/background.jpg");
   background-repeat: repeat;
-  margin: 0 auto;
+}
+.container{
+   width: 100vw;
+   height: 100vh;
+   display: flex;
+   justify-content: center;
+   align-items: center;
 }
