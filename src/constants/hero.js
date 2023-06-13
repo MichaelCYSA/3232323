@@ -1,4 +1,10 @@
-const hero = new Image();
-hero.src = "images/hero.png";
+const player = new Image();
+player.src = "images/player.webp";
 
-export default hero;
+const playerInJumping = new Image();
+playerInJumping.src = "images/player_in_jumping.webp";
+
+export default {
+  playerInJumping,
+  player,
+};

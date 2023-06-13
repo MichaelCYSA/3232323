@@ -5,7 +5,7 @@ body {
 }
 canvas {
   background-color: #000;
-  background-image: url("/images/background.jpg");
+  background-image: url("/images/background.webp");
   background-repeat: repeat;
 }
 .container{

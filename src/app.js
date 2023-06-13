@@ -1,8 +1,8 @@
 import "./styles/styles.css";
 import RandomUtil from "./utils/random.util";
 import platformImages from "./constants/platforms";
-import hero from "./constants/hero";
-import SpringSprites from './constants/sprites'
+import PlayerSprites from "./constants/hero";
+import SpringSprites from "./constants/sprites";
 
 const canvas = document.getElementById("game");
 const context = canvas.getContext("2d");
@@ -57,11 +57,12 @@ while (y > 0) {
       springRandom.coefficient,
       springRandom.number
     ),
+    inJumping: 0,
   });
 }
 
 const doodle = {
-  width: 40,
+  width: 55,
   height: 60,
   x: canvas.width / 2 - 20,
   y: platformStart - 60,
@@ -77,6 +78,8 @@ let prevDoodleY = doodle.y;
 let gameOver = false;
 
 function loop() {
+  doodle.inJumping = doodle.inJumping === 0 ? 0 : doodle.inJumping - 1;
+
   if (doodle.y - doodle.height > canvas.height && !gameOver) {
     gameOver = true;
   }
@@ -149,14 +152,20 @@ function loop() {
   platforms.forEach(function (platform) {
     if (platform.spring) {
       const x = platform.x + (platformWidth - 20) / 2;
-     // SpringSprites
-     // context.fillRect(x, platform.y - platformHeight, 20, 20);
-      const image = platform.hasScored ? SpringSprites[0] : SpringSprites[1]
-      context.drawImage(image, x , platform.y - 22, 20, 30);
+      // SpringSprites
+      // context.fillRect(x, platform.y - platformHeight, 20, 20);
+      const image = platform.hasScored ? SpringSprites[0] : SpringSprites[1];
+      context.drawImage(image, x, platform.y - 22, 20, 30);
     }
     // 'greenplatform.png'
     // context.fillRect(platform.x, platform.y, platformWidth, platformHeight);
-    context.drawImage(platformImages.green, platform.x, platform.y, platformWidth, platformHeight);
+    context.drawImage(
+      platformImages.green,
+      platform.x,
+      platform.y,
+      platformWidth,
+      platformHeight
+    );
     if (
       doodle.dy > 0 &&
       prevDoodleY + doodle.height <= platform.y &&
@@ -165,6 +174,7 @@ function loop() {
       doodle.y < platform.y + platformHeight &&
       doodle.y + doodle.height > platform.y
     ) {
+      doodle.inJumping = 20;
       if (!platform.hasScored) {
         doodle.y = platform.y - doodle.height;
         if (platform.spring) {
@@ -173,7 +183,7 @@ function loop() {
           doodle.dy = bounceVelocity;
         }
         platform.hasScored = true;
-       // score++;
+        // score++;
       } else {
         doodle.y = platform.y - doodle.height;
         if (platform.spring) {
@@ -187,25 +197,31 @@ function loop() {
   //hero
   // context.fillStyle = "yellow";
   // context.fillRect(doodle.x, doodle.y, doodle.width, doodle.height);
-  context.drawImage(hero, doodle.x, doodle.y,doodle.width, doodle.height);
+  context.drawImage(
+    doodle.inJumping ? PlayerSprites.playerInJumping : PlayerSprites.player,
+    doodle.x,
+    doodle.y,
+    doodle.width,
+    doodle.height
+  );
 
   prevDoodleY = doodle.y;
 
   let filteredPlatform = null;
   platforms = platforms.filter(function (platform) {
+    const visible = platform.y < canvas.height;
 
-    const visible = platform.y < canvas.height
-
-    if(!visible){
-       filteredPlatform = platform
+    if (!visible) {
+      filteredPlatform = platform;
     }
     return visible;
   });
 
-  if(filteredPlatform){
-    let distance = filteredPlatform.y - Math.max(...platforms.map(el => el.y))
-    score =  score + Math.ceil(distance / 10)
-    filteredPlatform = null
+  if (filteredPlatform) {
+    let distance =
+      filteredPlatform.y - Math.max(...platforms.map((el) => el.y));
+    score = score + Math.ceil(distance / 10);
+    filteredPlatform = null;
   }
 
   context.fillStyle = "black";
@@ -287,7 +303,6 @@ document.addEventListener("keyup", function (event) {
   ) {
     keydown = false;
   }
-  
 });
 
 document.addEventListener("DOMContentLoaded", function () {

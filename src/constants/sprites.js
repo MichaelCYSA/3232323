@@ -1,7 +1,7 @@
 const spring = new Image();
-spring.src = "images/spring.png";
+spring.src = "images/spring.webp";
 const springComp = new Image();
-springComp.src = "images/spring_comp.png";
+springComp.src = "images/spring_comp.webp";
 
 
 export default [spring, springComp];
