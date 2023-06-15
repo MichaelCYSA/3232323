@@ -2,22 +2,8 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const jumpHeight = 170;
-const steps = 25;
-
-const jumpPower = (jumpHeight / steps) ** (1 / 2) / steps;
-
-const jumpSteps = (() => {
-  const arr = [];
-  let prev = null;
-  for (let i = 0; i <= steps; i++) {
-    let result = i * (i * jumpPower) ** 2;
-    arr.push(prev ? result - prev : result);
-    prev = result;
-  }
-  return arr;
-})();
-
-const maxJumpStep = Math.max(...jumpSteps);
+const gravity = 4;
+const jumpPower = 1;
 
 class Platform {
   constructor(x, y, width) {
@@ -41,15 +27,17 @@ class Player {
   constructor() {
     this.x = 0;
     this.y = canvas.height - 45;
+    this.moveY = canvas.height - 45;
     this.height = 45;
     this.width = 40;
     this.speed = 10;
-
     this.jumpDirection = 0;
+    this.jumpCurrentHeight = 0;
+    this.jumpSpeed = gravity * jumpPower;
     this.moveDirection = 0;
     this.hasJumped = false;
-    this.stepIndex = jumpSteps.length - 1;
-    this.onPlatform = true;
+    this.jumpDistance = 0;
+    this.playerOnPlatform = true;
   }
 
   playerRender() {
@@ -63,56 +51,53 @@ class Player {
   }
 
   checkCollision(platform) {
-
-    /*
-       playerBottom >= platformTop && // Если игрок ниже верхней части платформы
-      playerBottom <= platformBottom + maxJumpStep && // Если игрок выше нижней части платформы с учетом максимального прыжка
-      this.x + this.width >= platform.x && // Если правая сторона игрока пересекается с левой стороной платформы
-      this.x <= platform.x + platform.width && // Если левая сторона игрока пересекается с правой стороной платформы
-      this.jumpDirection !== 1 // Если игрок не находится в процессе прыжка вверх
-    */
-      if (
-        this.y + this.height >= platform.y && // если игрок ниже верхней части платформы
-        this.y + this.height <= platform.y + platform.height + maxJumpStep && // если игрок выше нижней части платформы
-        this.x + this.width >= platform.x &&
-        this.x <= platform.x + platform.width &&
-        this.jumpDirection !== 1 && !this.onPlatform
-      ) {
-        this.y = platform.y - this.height - maxJumpStep;
-        this.hasJumped = false;
-        this.jumpDirection = 0;
-        this.stepIndex = steps - 2;
-        this.onPlatform = true;
-        console.log('onPlatform')
-      }else if(!this.hasJumped && this.onPlatform){
-         this.onPlatform = false
+    if (
+      this.moveY + this.height >= platform.y &&
+      this.moveY + this.height <= platform.y + platform.height &&
+      this.x + this.width >= platform.x &&
+      this.x <= platform.x + platform.width
+    ) {
+      if (this.jumpDirection !== -1) {
+        this.moveY = platform.y - this.height;
+        if (!this.hasJumped) {
+          this.jumpDirection = 0;
+          this.y = this.moveY;
+          this.jumpCurrentHeight = 0;
+          this.playerOnPlatform = true;
+        }
+        this.playerOnPlatform = true;
       }
-
-    if (this.y + this.height >= canvas.height) {
-      this.onPlatform = true;
-      this.y = canvas.height - this.height;
-    }
-
-    if (!this.onPlatform && !this.hasJumped) {
-      this.y = this.y + 5; // если я тут меняю число на 10 то игровые стновить на платформы ниже чуть с чем это связано и как можно испаравить ?
+    } else {
+      this.playerOnPlatform = false;
     }
   }
+
   updateJump() {
     if (this.jumpDirection === 1) {
-      if (this.stepIndex - 1 < 0) {
-        this.stepIndex = 1;
-        this.jumpDirection = -1;
+      this.jumpCurrentHeight += this.jumpSpeed;
+      this.jumpDistance =
+        Math.sin((Math.PI / jumpHeight) * this.jumpCurrentHeight) * jumpHeight;
+
+      this.y = this.moveY - this.jumpDistance;
+
+      if (approximatelyEqual(this.jumpDistance, jumpHeight, 1)) {
+        this.hasJumped = false;
+        this.jumpSpeed += 0.1; // Увеличиваем высоту прыжка с каждым запрыгиванием
       }
-      this.y -= jumpSteps[this.stepIndex];
-      this.stepIndex--;
-    } else if (this.jumpDirection === -1) {
-      if (this.stepIndex + 1 > steps - 1) {
-        this.jumpDirection = 0;
-        this.stepIndex = steps - 1;
+      if (this.jumpCurrentHeight >= jumpHeight) {
+        this.jumpDirection = -1;
+        this.jumpCurrentHeight = 0;
         this.hasJumped = false;
       }
-      this.stepIndex++;
-      this.y += jumpSteps[this.stepIndex];
+    } else if (this.jumpDirection === -1) {
+      this.moveY += gravity;
+      this.jumpCurrentHeight += gravity;
+
+      if (this.moveY >= this.y) {
+        this.jumpDirection = 0;
+        this.jumpCurrentHeight = 0;
+        this.jumpSpeed = gravity * jumpPower; // Сбрасываем высоту прыжка после завершения прыжка
+      }
     }
   }
 
@@ -132,7 +117,6 @@ class Player {
     if (this.jumpDirection === 0) {
       this.jumpDirection = 1;
       this.hasJumped = true;
-      this.onPlatform = false;
     }
   }
 }
@@ -172,13 +156,19 @@ const gameLoop = () => {
 
   drawPlatforms();
 
-  player.playerRender();
   platforms.forEach((platform) => {
     player.checkCollision(platform);
   });
 
+  player.playerRender();
+
   ctx.fillStyle = "red";
   ctx.fillRect(player.x, player.y, player.width, player.height);
+  let gravityState = player.y + gravity;
+  const gravityLimit = player.playerOnPlatform
+    ? player.y
+    : canvas.height - player.height;
+  player.y = gravityState > gravityLimit ? gravityLimit : gravityState;
 };
 
 generatePlatforms();
