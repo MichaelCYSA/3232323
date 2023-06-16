@@ -10,7 +10,7 @@ const jumpSteps = (() => {
   const arr = [];
   let prev = null;
   for (let i = 0; i <= steps; i++) {
-    let result = i * (i * jumpPower) ** 2;
+    let result = Math.round(i * (i * jumpPower) ** 2);
     arr.push(prev ? result - prev : result);
     prev = result;
   }
@@ -52,9 +52,12 @@ class Player {
     this.onPlatform = true;
   }
 
-  playerRender() {
+  playerRender(platforms) {
     this.updateMovement();
     this.updateJump();
+    platforms.forEach((platform) => {
+      this.checkCollision(platform);
+    });
   }
 
   updateMovement() {
@@ -64,13 +67,6 @@ class Player {
 
   checkCollision(platform) {
 
-    /*
-       playerBottom >= platformTop && // Если игрок ниже верхней части платформы
-      playerBottom <= platformBottom + maxJumpStep && // Если игрок выше нижней части платформы с учетом максимального прыжка
-      this.x + this.width >= platform.x && // Если правая сторона игрока пересекается с левой стороной платформы
-      this.x <= platform.x + platform.width && // Если левая сторона игрока пересекается с правой стороной платформы
-      this.jumpDirection !== 1 // Если игрок не находится в процессе прыжка вверх
-    */
       if (
         this.y + this.height >= platform.y && // если игрок ниже верхней части платформы
         this.y + this.height <= platform.y + platform.height + maxJumpStep && // если игрок выше нижней части платформы
@@ -94,7 +90,7 @@ class Player {
     }
 
     if (!this.onPlatform && !this.hasJumped) {
-      this.y = this.y + 5; // если я тут меняю число на 10 то игровые стновить на платформы ниже чуть с чем это связано и как можно испаравить ?
+      this.y = this.y + 5; 
     }
   }
   updateJump() {
@@ -142,10 +138,11 @@ let player = new Player();
 const platforms = [];
 
 function generatePlatforms() {
-  const platformCount = 5;
+  const platformCount = 5
+  ;
   const platformWidth = 80;
   const platformGap = 100;
-  const maxPlatformHeight = canvas.height - jumpHeight - 100;
+  const maxPlatformHeight = canvas.height  - 100;
 
   let platformX = 0;
   let platformY = canvas.height - platformGap;
@@ -166,16 +163,14 @@ function drawPlatforms() {
 }
 
 const gameLoop = () => {
+  requestAnimationFrame(gameLoop);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  requestAnimationFrame(gameLoop);
+ 
 
   drawPlatforms();
 
-  player.playerRender();
-  platforms.forEach((platform) => {
-    player.checkCollision(platform);
-  });
+  player.playerRender(platforms);
 
   ctx.fillStyle = "red";
   ctx.fillRect(player.x, player.y, player.width, player.height);
